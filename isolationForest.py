@@ -17,6 +17,7 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.ensemble import IsolationForest
 from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score
 
 #url = 'https://raw.githubusercontent.com/wiktorDeka/WykrywanieAnomalii/main/reduced_dataset_sdn.csv'
 url = 'https://raw.githubusercontent.com/wiktorDeka/WykrywanieAnomalii/main/dataset_sdn.csv'
@@ -59,24 +60,16 @@ percentage = 0.2
 X_train, X_test, y_train, y_test = train_test_split(counters_withoutLabel, counters['label'], train_size=percentage, random_state=42)
 # Split data into training features and target variable
 
-# Isolation forest
-las_izol = IsolationForest()
-outliers_pred = las_izol.fit_predict(X_train)
+# Isolation Forest
+iso_forest = IsolationForest()
+iso_forest.fit(X_train)
 
-X_train['wspolczynnik_anomalnosci'] = las_izol.decision_function(X_train)
-X_train['rozpoznanie'] = outliers_pred
+# Predict on the test set
+y_pred = iso_forest.predict(X_test)
 
-top_features = ['pktperflow', 'bytecount', 'packetins']
+# Convert predictions to binary (1 for inliers, -1 for outliers)
+y_pred_binary = np.where(y_pred == 1, 0, 1)
 
-""" # Plotting the 3D scatter plot
-fig = px.scatter_3d(X_train, x=top_features[0], y=top_features[1], z=top_features[2], color='rozpoznanie',
-                    title='Wynik działania lasu izolującego (Top 3 Features)')
-fig.show() """
-
-counters_withoutLabel = counters.drop('label',axis=1)
-
-print("Dokładność na zbiorze uczącym:", (y_train != -1).mean())
-anomaly_predictions = las_izol.predict(counters_withoutLabel)
 # Calculate accuracy
-accuracy = (anomaly_predictions == -1).mean()
-print(f"Dokładność na zbiorze całym: {accuracy}")
+accuracy = accuracy_score(y_test, y_pred_binary)
+print("Accuracy:", accuracy)
