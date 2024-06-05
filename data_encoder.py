@@ -1,6 +1,7 @@
 from sklearn.preprocessing import LabelEncoder, OneHotEncoder
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import TargetEncoder
+from sklearn.decomposition import PCA
 import pandas as pd
 
 
@@ -12,7 +13,7 @@ def extract_last_byte(ip):
         return None
 
 
-def encode_data(network_data, ip_encoding):
+def encode_data(network_data, ip_encoding, variance_threshold=None):
     if ip_encoding == 0:
         # label_encoding
         label_encoder = LabelEncoder()
@@ -30,8 +31,6 @@ def encode_data(network_data, ip_encoding):
         y = network_data['label']
         X = network_data.drop('label', axis=1)
 
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=0)
-
     elif ip_encoding == 1:
         # target encoding
         te = TargetEncoder(smooth='auto', target_type='binary')
@@ -39,8 +38,7 @@ def encode_data(network_data, ip_encoding):
         X = network_data.drop('label', axis=1)
         target = network_data['src']
 
-        X_trans = te.fit_transform(X, target)
-        X_train, X_test, y_train, y_test = train_test_split(X_trans, y, test_size=0.3, random_state=0)
+        X = te.fit_transform(X, target)
 
     elif ip_encoding == 2:
         # encode as last byte of ip addr
@@ -57,8 +55,6 @@ def encode_data(network_data, ip_encoding):
 
         y = network_data['label']
         X = network_data.drop('label', axis=1)
-
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=0)
 
     elif ip_encoding == 3:
         # One-Hot Encoding
@@ -82,11 +78,15 @@ def encode_data(network_data, ip_encoding):
 
         y = network_data['label']
         X = network_data.drop('label', axis=1)
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=0)
     else:
         print('invalid encoding')
         exit(-1)
 
+    if variance_threshold is not None:
+        pca = PCA(n_components=variance_threshold)
+        X = pca.fit_transform(X)
+
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=0)
     return X_train, X_test, y_train, y_test
 
 
