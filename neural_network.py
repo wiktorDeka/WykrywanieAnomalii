@@ -7,7 +7,10 @@ from data_encoder import encode_data
 
 def perceptron_routine():
     data = pd.read_csv('dataset_sdn.csv')
-    X_train, X_test, y_train, y_test = encode_data(data, 3)
+    X_train, X_test, y_train, y_test = encode_data(data, 3, drop=True)
+    scaler = StandardScaler()
+    X_train = scaler.fit_transform(X_train)
+    X_test = scaler.transform(X_test)
 
     scaler = StandardScaler()
     X_train = scaler.fit_transform(X_train)
